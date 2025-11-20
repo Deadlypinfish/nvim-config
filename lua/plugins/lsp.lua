@@ -52,7 +52,7 @@ return {
             keymap("n", "gD", vim.lsp.buf.declaration, opts)
             keymap("n", "gr", vim.lsp.buf.references, opts)
             keymap("n", "gi", vim.lsp.buf.implementation, opts)
-            keymap("n", "gt", vim.lsp.buf.type_definition, opts)
+            keymap("n", "gy", vim.lsp.buf.type_definition, opts)
             keymap("n", "gh", vim.lsp.buf.hover, opts)
             keymap("n", "gH", vim.lsp.buf.signature_help, opts)
 
