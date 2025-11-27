@@ -38,38 +38,41 @@ return {
         })
 
         -------------------------------------------------
-        -- LSP Setup
+        -- LSP Attach Keymaps
         -------------------------------------------------
-        local lspconfig = require("lspconfig")
+        vim.api.nvim_create_autocmd("LspAttach", {
+            group = vim.api.nvim_create_augroup("UserLspConfig", {}),
+            callback = function(ev)
+                local opts = { buffer = bufnr, noremap = true, silent = true }
+                local keymap = vim.keymap.set
 
-        local on_attach = function(_, bufnr)
-            local opts = { buffer = bufnr, noremap = true, silent = true }
+                -- Core
+                keymap("n", "gd", vim.lsp.buf.definition, opts)
+                keymap("n", "gD", vim.lsp.buf.declaration, opts)
+                keymap("n", "gr", vim.lsp.buf.references, opts)
+                keymap("n", "gi", vim.lsp.buf.implementation, opts)
+                keymap("n", "gy", vim.lsp.buf.type_definition, opts)
+                keymap("n", "gh", vim.lsp.buf.hover, opts)
+                keymap("n", "gH", vim.lsp.buf.signature_help, opts)
 
-            local keymap = vim.keymap.set
+                -- Diagnostics
+                keymap("n", "<leader>e", vim.diagnostic.open_float, opts)
+                keymap("n", "[d", vim.diagnostic.goto_prev, opts)
+                keymap("n", "]d", vim.diagnostic.goto_next, opts)
+                keymap("n", "<leader>q", vim.diagnostic.setloclist, opts)
 
-            -- Core
-            keymap("n", "gd", vim.lsp.buf.definition, opts)
-            keymap("n", "gD", vim.lsp.buf.declaration, opts)
-            keymap("n", "gr", vim.lsp.buf.references, opts)
-            keymap("n", "gi", vim.lsp.buf.implementation, opts)
-            keymap("n", "gy", vim.lsp.buf.type_definition, opts)
-            keymap("n", "gh", vim.lsp.buf.hover, opts)
-            keymap("n", "gH", vim.lsp.buf.signature_help, opts)
+                -- Actions
+                keymap("n", "<leader>ca", vim.lsp.buf.code_action, opts)
+                keymap("n", "<leader>rn", vim.lsp.buf.rename, opts)
+                keymap("n", "<leader>f", function()
+                    vim.lsp.buf.format { async = true }
+                end, opts)
+            end,
+        })
 
-            -- Diagnostics
-            keymap("n", "<leader>e", vim.diagnostic.open_float, opts)
-            keymap("n", "[d", vim.diagnostic.goto_prev, opts)
-            keymap("n", "]d", vim.diagnostic.goto_next, opts)
-            keymap("n", "<leader>q", vim.diagnostic.setloclist, opts)
-
-            -- Actions
-            keymap("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-            keymap("n", "<leader>rn", vim.lsp.buf.rename, opts)
-            keymap("n", "<leader>f", function()
-                vim.lsp.buf.format { async = true }
-            end, opts)
-        end
-
+        -------------------------------------------------
+        -- LSP Setup (new API)
+        -------------------------------------------------
         local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
         local servers = {
@@ -85,13 +88,12 @@ return {
         }
 
         for _, server in ipairs(servers) do
-            local opts = {
-                on_attach = on_attach,
+            local config = {
                 capabilities = capabilities,
             }
             
             if server == "lua_ls" then
-                opts.settings = {
+                config.settings = {
                     Lua = {
                         runtime = {
                             version = "LuaJIT",
@@ -109,8 +111,11 @@ return {
                 }
             end
 
-            require("lspconfig")[server].setup(opts)
+            vim.lsp.config(server, config)
         end
+
+        -- Enable all configured servers
+        vim.lsp.enable(servers)
 
         -------------------------------------------------
         -- Completion Setup
