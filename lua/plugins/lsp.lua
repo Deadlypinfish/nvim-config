@@ -91,7 +91,7 @@ return {
             local config = {
                 capabilities = capabilities,
             }
-            
+
             if server == "lua_ls" then
                 config.settings = {
                     Lua = {
