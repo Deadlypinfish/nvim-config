@@ -36,8 +36,8 @@ vim.keymap.set("v", "<leader>d", "\"_d")
 
 vim.keymap.set("n", "Q", "<nop>")
 vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
-vim.keymap.set("n", "<M-h>", "<cmd>silent !tmux-sessionizer -s 0 --vsplit<CR>")
-vim.keymap.set("n", "<M-H>", "<cmd>silent !tmux neww tmux-sessionizer -s 0<CR>")
+-- vim.keymap.set("n", "<M-h>", "<cmd>silent !tmux-sessionizer -s 0 --vsplit<CR>")
+-- vim.keymap.set("n", "<M-H>", "<cmd>silent !tmux neww tmux-sessionizer -s 0<CR>")
 --vim.keymap.set("n", "<leader>f", function()
 --    require("conform").format({ bufnr = 0 })
 --end)
@@ -46,6 +46,47 @@ vim.keymap.set("n", "<M-H>", "<cmd>silent !tmux neww tmux-sessionizer -s 0<CR>")
 -- vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz")
 -- vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz")
 -- vim.keymap.set("n", "<leader>k", "<cmd>lnext<CR>zz")
+vim.keymap.set("n", "<leader>qo", "<cmd>copen<CR>", { desc = "Quickfix open" })
+vim.keymap.set("n", "<leader>qq", "<cmd>cclose<CR>", { desc = "Quickfix close" })
 
 vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
+local function qf_info()
+    return vim.fn.getqflist({ size = 0, idx = 0 })
+end
+
+local function qf_jump_idx(idx)
+    pcall(vim.cmd, ("cc %d"):format(idx))
+    vim.cmd("normal! zz")
+end
+
+local function qf_next_wrap()
+    local info = qf_info()
+    if (info.size or 0) == 0 then return end
+    if (info.idx or 0) >= (info.size or 0) then
+        qf_jump_idx(1)
+    else
+        qf_jump_idx(info.idx + 1)
+    end
+end
+
+local function qf_prev_wrap()
+    local info = qf_info()
+    if (info.size or 0) == 0 then return end
+    if (info.idx or 0) <= 1 then
+        qf_jump_idx(info.size)
+    else
+        qf_jump_idx(info.idx - 1)
+    end
+end
+
+vim.keymap.set("n", "<C-n>", qf_next_wrap, { desc = "Quickfix next (wrap)" })
+vim.keymap.set("n", "<C-p>", qf_prev_wrap, { desc = "Quickfix prev (wrap)" })
+
+-- Make `q` close the quickfix window when you're focused inside it
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "qf",
+    callback = function()
+        vim.keymap.set("n", "q", "<cmd>cclose<cr>", { buffer = true, silent = true })
+    end,
+})
